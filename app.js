@@ -255,8 +255,10 @@ function countActiveInMonth(y, m, tenants) {
   if (monthKey(y, m) < monthKey(BASE_Y, BASE_M)) return 0;
   let count = 1; // the admin/account holder
   for (const tn of tenants) {
+    if (!tn.registrationDate) continue; // skip tenants who haven't filled in details yet
     const reg = new Date(tn.registrationDate);
     const ry = reg.getFullYear(), rm = reg.getMonth() + 1;
+    if (isNaN(ry) || isNaN(rm)) continue; // skip invalid dates
     if (monthKey(ry, rm) > monthKey(y, m)) continue;
     if (tn.deregistrationDate) {
       const der = new Date(tn.deregistrationDate);
