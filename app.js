@@ -729,10 +729,9 @@ const EGG_TYPES  = ['zigzag', 'dots', 'stripes'];
 function drawEggPath(ctx, rx, ry) {
   ctx.beginPath();
   ctx.moveTo(0, -ry);
-  // Right side: narrower up top, wider and rounder at bottom
-  ctx.bezierCurveTo( rx * 0.88, -ry * 0.6,  rx, ry * 0.28,  0,  ry);
-  // Left side: mirror
-  ctx.bezierCurveTo(-rx,  ry * 0.28, -rx * 0.88, -ry * 0.6,  0, -ry);
+  // CP1 at (rx, -ry) → horizontal tangent at top = round top
+  ctx.bezierCurveTo( rx,       -ry,       rx * 1.08,  ry * 0.45,  0,  ry);
+  ctx.bezierCurveTo(-rx * 1.08, ry * 0.45, -rx,       -ry,         0, -ry);
   ctx.closePath();
 }
 
@@ -794,11 +793,13 @@ class EggParticle {
       ctx.stroke();
     } else if (this.type === 'dots') {
       ctx.fillStyle = 'rgba(255,255,255,0.82)';
-      const r = this.size * 0.1;
+      const r = this.size * 0.09;
+      // 1-2-2-1 grid, widths scaled to egg shape
       [
-        [0, -ry * 0.44], [-rx * 0.48, -ry * 0.06],
-        [rx * 0.48,  ry * 0.06], [0, ry * 0.38],
-        [-rx * 0.38, ry * 0.38], [rx * 0.38, -ry * 0.42]
+        [0,           -ry * 0.52],
+        [-rx * 0.38,  -ry * 0.15], [rx * 0.38, -ry * 0.15],
+        [-rx * 0.42,   ry * 0.22], [rx * 0.42,  ry * 0.22],
+        [0,            ry * 0.54],
       ].forEach(([dx, dy]) => {
         ctx.beginPath();
         ctx.arc(dx, dy, r, 0, Math.PI * 2);
