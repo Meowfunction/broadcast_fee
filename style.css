@@ -37,7 +37,8 @@ body {
   top: 0; left: 0;
   z-index: 1000;
   padding: 8px 14px;
-  font-size: 0.78rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
   color: #aaa;
   letter-spacing: 0.02em;
   pointer-events: none;
