@@ -54,6 +54,8 @@ const T = {
     btnMarkPaid: "Mark Paid",
     btnMarkUnpaid: "Mark Unpaid",
     btnDelete: "Delete",
+    btnReregister: "Re-register",
+    confirmReregister: "Re-register this tenant? This will restore them as an active tenant.",
     payTitle: "Payment Information",
     bnrUnknown: "Beitragsnummer: Unknown",
     btnPay: "Pay",
@@ -125,6 +127,8 @@ const T = {
     btnMarkPaid: "Als bezahlt markieren",
     btnMarkUnpaid: "Als unbezahlt markieren",
     btnDelete: "Löschen",
+    btnReregister: "Wieder anmelden",
+    confirmReregister: "Diesen Mieter wieder anmelden? Er wird wieder als aktiver Mieter geführt.",
     payTitle: "Zahlungsinformationen",
     bnrUnknown: "Beitragsnummer: Unbekannt",
     btnPay: "Bezahlen",
@@ -544,6 +548,8 @@ function renderTable() {
         const lbl = tn.paid ? t('btnMarkUnpaid') : t('btnMarkPaid');
         const cls = tn.paid ? 'btn-unpaid' : 'btn-paid';
         actions += `<button class="btn btn-sm ${cls}" data-action="togglePaid" data-id="${tn.id}">${lbl}</button>`;
+      } else {
+        actions += `<button class="btn btn-sm btn-reregister" data-action="reregister" data-id="${tn.id}">${t('btnReregister')}</button>`;
       }
       actions += `<button class="btn btn-sm btn-del" data-action="delete" data-id="${tn.id}">${t('btnDelete')}</button>`;
     } else if (isMe && !movedOut) {
@@ -663,6 +669,10 @@ function doTogglePaid(id) {
 
 function doDelete(id) {
   dbRef(`tenants/${id}`).remove();
+}
+
+function doReregister(id) {
+  dbRef(`tenants/${id}`).update({ deregistrationDate: null });
 }
 
 // ==============================
@@ -825,8 +835,9 @@ function init() {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const { action, id } = btn.dataset;
-    if (action === 'deregister') showConfirm(t('confirmDeregister'), () => doDeregister(id));
-    else if (action === 'delete')    showConfirm(t('confirmDelete'),    () => doDelete(id));
+    if (action === 'deregister')    showConfirm(t('confirmDeregister'),    () => doDeregister(id));
+    else if (action === 'delete')   showConfirm(t('confirmDelete'),        () => doDelete(id));
+    else if (action === 'reregister') showConfirm(t('confirmReregister'), () => doReregister(id));
     else if (action === 'togglePaid') doTogglePaid(id);
   });
 

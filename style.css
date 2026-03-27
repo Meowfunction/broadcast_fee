@@ -208,6 +208,8 @@ body {
 .btn-deregister:hover { background: var(--yellow); color: var(--dark); }
 .btn-del { background: #fde8e8; color: #c03030; border: 1.5px solid #f5b5b5; }
 .btn-del:hover { background: #f5c0c0; }
+.btn-reregister { background: #e8f4ff; color: #1a5c9e; border: 1.5px solid #9ac4f0; }
+.btn-reregister:hover { background: #cce4f9; }
 .full { width: 100%; margin-top: 4px; }
 
 /* Messages */
