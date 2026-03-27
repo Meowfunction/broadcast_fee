@@ -5,7 +5,7 @@
 
 :root {
   --yellow:       #FFF421;
-  --yellow-light: #FEF3C2;
+  --yellow-light: #FFFDE0;
   --pink:         #7DC97A;   /* repurposed to green-mid */
   --pink-light:   #E6F7E5;   /* repurposed to green-light */
   --blue:         #4BAE6E;   /* repurposed to green-dark */
@@ -99,7 +99,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: linear-gradient(135deg, #FEF3C2 0%, #D6F0DC 60%, #B7E5C4 100%);
+  background: linear-gradient(135deg, var(--yellow-light) 0%, #D6F0DC 60%, #B7E5C4 100%);
   min-height: 100vh;
 }
 .login-card {
@@ -414,7 +414,7 @@ tbody tr.moved-out { opacity: 0.55; }
   position: fixed;
   inset: 0;
   z-index: 3000;
-  background: linear-gradient(135deg, #FEF3C2 0%, #D6F0DC 60%, #B7E5C4 100%);
+  background: linear-gradient(135deg, var(--yellow-light) 0%, #D6F0DC 60%, #B7E5C4 100%);
   display: flex;
   align-items: center;
   justify-content: center;

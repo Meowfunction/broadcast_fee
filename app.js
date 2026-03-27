@@ -275,10 +275,12 @@ function countActiveInMonth(y, m, tenants) {
 }
 
 function calcFee(tenant, allTenants) {
+  if (!tenant.registrationDate) return 0;
   const now = new Date();
   const curY = now.getFullYear(), curM = now.getMonth() + 1;
 
   const reg = new Date(tenant.registrationDate);
+  if (isNaN(reg.getTime())) return 0;
   let sy = reg.getFullYear(), sm = reg.getMonth() + 1;
 
   let ey = curY, em = curM;
