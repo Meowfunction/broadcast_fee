@@ -4,7 +4,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --yellow:       #FFF44D;
+  --yellow:       #FFF421;
   --yellow-light: #FEF3C2;
   --pink:         #7DC97A;   /* repurposed to green-mid */
   --pink-light:   #E6F7E5;   /* repurposed to green-light */
@@ -194,8 +194,8 @@ body {
   white-space: nowrap;
 }
 .btn:active { transform: scale(0.97); }
-.btn-primary { background: var(--yellow); color: var(--dark); box-shadow: 0 2px 8px rgba(255,244,77,0.4); }
-.btn-primary:hover { box-shadow: 0 4px 14px rgba(255,244,77,0.55); }
+.btn-primary { background: var(--yellow); color: var(--dark); box-shadow: 0 2px 8px rgba(255,244,33,0.4); }
+.btn-primary:hover { box-shadow: 0 4px 14px rgba(255,244,33,0.55); }
 .btn-danger  { background: #e05c5c; color: #fff; }
 .btn-danger:hover { background: #c94848; }
 .btn-ghost   { background: #f0ead8; color: var(--dark); }

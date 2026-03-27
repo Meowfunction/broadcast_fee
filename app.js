@@ -727,11 +727,14 @@ const EGG_COLORS = ['#9B59B6', '#27AE60', '#E91E63', '#FF9800'];
 const EGG_TYPES  = ['zigzag', 'dots', 'stripes'];
 
 function drawEggPath(ctx, rx, ry) {
+  // 4-segment bezier: c=0.55 keeps the top arc circular (round top)
+  const c = 0.55;
   ctx.beginPath();
   ctx.moveTo(0, -ry);
-  // CP1 at (rx, -ry) → horizontal tangent at top = round top
-  ctx.bezierCurveTo( rx,       -ry,       rx * 1.08,  ry * 0.45,  0,  ry);
-  ctx.bezierCurveTo(-rx * 1.08, ry * 0.45, -rx,       -ry,         0, -ry);
+  ctx.bezierCurveTo( rx * c, -ry,       rx,          -ry * 0.15,  rx,  0);
+  ctx.bezierCurveTo( rx,      ry * 0.55, rx  * 0.62,  ry,          0,  ry);
+  ctx.bezierCurveTo(-rx * 0.62, ry,     -rx,           ry * 0.55, -rx,  0);
+  ctx.bezierCurveTo(-rx,     -ry * 0.15, -rx * c,     -ry,         0, -ry);
   ctx.closePath();
 }
 
