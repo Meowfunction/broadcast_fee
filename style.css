@@ -4,17 +4,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --yellow:  #F7C948;
-  --yellow-light: #FFF5C2;
-  --pink:    #F4A0B0;
-  --pink-light: #FDE8ED;
-  --blue:    #7EC8E3;
-  --blue-light: #DDF3FB;
-  --green:   #7DC99A;
-  --green-light: #DFFAEB;
-  --cream:   #FFFDF0;
-  --dark:    #2E2B20;
-  --mid:     #6B6354;
+  --yellow:       #F2B705;
+  --yellow-light: #FEF3C2;
+  --pink:         #7DC97A;   /* repurposed to green-mid */
+  --pink-light:   #E6F7E5;   /* repurposed to green-light */
+  --blue:         #4BAE6E;   /* repurposed to green-dark */
+  --blue-light:   #D6F0DC;   /* repurposed to green-pale */
+  --green:        #3A9E5F;
+  --green-light:  #D6F0DC;
+  --cream:        #FFFBEA;
+  --dark:         #1E2B1A;
+  --mid:          #4A5E3A;
   --radius:  14px;
   --shadow:  0 4px 18px rgba(0,0,0,0.09);
 }
@@ -97,7 +97,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: linear-gradient(135deg, #FFF5C2 0%, #FDE8ED 40%, #DDF3FB 100%);
+  background: linear-gradient(135deg, #FEF3C2 0%, #D6F0DC 60%, #B7E5C4 100%);
   min-height: 100vh;
 }
 .login-card {
@@ -129,7 +129,7 @@ body {
   margin-bottom: 24px;
   border-radius: 10px;
   overflow: hidden;
-  border: 2px solid var(--yellow);
+  border: 2px solid var(--green);
 }
 .tab-btn {
   flex: 1;
@@ -142,8 +142,8 @@ body {
   color: var(--mid);
   transition: background 0.15s, color 0.15s;
 }
-.tab-btn.active { background: var(--yellow); color: var(--dark); }
-.tab-btn:hover:not(.active) { background: var(--yellow-light); }
+.tab-btn.active { background: var(--green); color: #fff; }
+.tab-btn:hover:not(.active) { background: var(--green-light); }
 
 /* ==============================
    FORMS
@@ -172,7 +172,7 @@ body {
   background: #fafaf8;
   color: var(--dark);
 }
-.field-group input:focus { border-color: var(--yellow); background: #fff; }
+.field-group input:focus { border-color: var(--green); background: #fff; }
 
 /* Buttons */
 .btn {
@@ -203,8 +203,8 @@ body {
 .btn-paid:hover { background: #63b582; }
 .btn-unpaid { background: #ddd; color: var(--mid); }
 .btn-unpaid:hover { background: #ccc; }
-.btn-deregister { background: var(--pink-light); color: #a02040; border: 1.5px solid var(--pink); }
-.btn-deregister:hover { background: var(--pink); color: #fff; }
+.btn-deregister { background: #fff3cd; color: #7a5000; border: 1.5px solid var(--yellow); }
+.btn-deregister:hover { background: var(--yellow); color: var(--dark); }
 .btn-del { background: #fde8e8; color: #c03030; border: 1.5px solid #f5b5b5; }
 .btn-del:hover { background: #f5c0c0; }
 .full { width: 100%; margin-top: 4px; }
@@ -218,7 +218,7 @@ body {
    HEADER
    ============================== */
 .site-header {
-  background: linear-gradient(135deg, var(--yellow) 0%, var(--pink) 100%);
+  background: linear-gradient(135deg, var(--yellow) 0%, var(--green) 100%);
   padding: 20px 24px 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
@@ -266,8 +266,8 @@ body {
   border-top: 5px solid transparent;
 }
 .card-yellow { border-top-color: var(--yellow); }
-.card-blue   { border-top-color: var(--blue); }
-.card-pink   { border-top-color: var(--pink); }
+.card-blue   { border-top-color: var(--green); }
+.card-pink   { border-top-color: var(--yellow); }
 .card-green  { border-top-color: var(--green); }
 .card h2 {
   font-size: 1.1rem;
@@ -296,7 +296,7 @@ table {
   font-size: 0.9rem;
 }
 thead tr {
-  background: var(--blue-light);
+  background: var(--yellow-light);
 }
 th {
   padding: 10px 12px;
@@ -376,7 +376,7 @@ tbody tr.moved-out { opacity: 0.55; }
   position: fixed;
   inset: 0;
   z-index: 3000;
-  background: linear-gradient(135deg, #FFF5C2 0%, #FDE8ED 40%, #DDF3FB 100%);
+  background: linear-gradient(135deg, #FEF3C2 0%, #D6F0DC 60%, #B7E5C4 100%);
   display: flex;
   align-items: center;
   justify-content: center;
