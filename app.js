@@ -151,7 +151,7 @@ const T = {
 // ==============================
 let lang = 'en';
 let currentUserId = null; // 'admin' or tenant id
-let appData = { admin: null, tenants: {} };
+let appData = { admin: null, adminPrivate: null, tenants: {} };
 let db = null;
 let paymentRevealed = false;
 let authReady = false;
@@ -181,28 +181,47 @@ function getTenantsList() {
 // REALTIME DATA LISTENER
 // ==============================
 function startDataListener() {
-  dbRef('/').on('value', (snapshot) => {
-    appData = snapshot.val() || { admin: null, tenants: {} };
-    if (!appData.tenants) appData.tenants = {};
+  let tenantsReady = false, adminReady = false;
 
-    // Hide loading spinner on first load
+  function onBothReady() {
     document.getElementById('loading').classList.add('hidden');
+  }
 
-    // Update admin tab visibility when data changes
-    if (!document.getElementById('pAdmin').classList.contains('hidden')) {
-      updateAdminTabUI();
-    }
-
-    // Re-render if already on main page
-    if (currentUserId && !document.getElementById('mainPage').classList.contains('hidden')) {
+  function rerender() {
+    if (!document.getElementById('mainPage').classList.contains('hidden') && currentUserId) {
       renderTable();
       renderPayment();
     }
-  }, (error) => {
-    console.error('Firebase read error:', error);
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('loadingText').textContent = 'Database error: ' + error.message;
-    document.getElementById('loading').classList.remove('hidden');
+  }
+
+  dbRef('tenants').on('value', snapshot => {
+    appData.tenants = snapshot.val() || {};
+    if (!tenantsReady) { tenantsReady = true; if (adminReady) onBothReady(); }
+    rerender();
+  }, err => showDbError(err));
+
+  dbRef('admin').on('value', snapshot => {
+    appData.admin = snapshot.val() || null;
+    if (!adminReady) { adminReady = true; if (tenantsReady) onBothReady(); }
+    if (!document.getElementById('pAdmin').classList.contains('hidden')) updateAdminTabUI();
+    rerender();
+  }, err => showDbError(err));
+}
+
+function showDbError(err) {
+  console.error('Firebase error:', err);
+  document.getElementById('loadingText').textContent = 'Database error: ' + err.message;
+  document.getElementById('loading').classList.remove('hidden');
+}
+
+function startAdminPrivateListener() {
+  dbRef('adminPrivate').on('value', snapshot => {
+    appData.adminPrivate = snapshot.val() || null;
+    // Migrate beitragsnummer from old location if present
+    if (appData.admin?.beitragsnummer && !appData.adminPrivate?.beitragsnummer) {
+      dbRef('adminPrivate').set({ beitragsnummer: appData.admin.beitragsnummer });
+      dbRef('admin/beitragsnummer').remove();
+    }
   });
 }
 
@@ -417,6 +436,7 @@ function adminLogin(username, password) {
   const uid = firebase.auth().currentUser?.uid || '';
   if (uid) dbRef('admin/uid').set(uid);
   currentUserId = 'admin';
+  startAdminPrivateListener();
   return null;
 }
 
@@ -425,7 +445,9 @@ function adminSetup(username, password, beitragsnummer) {
   if (!username || !password || !beitragsnummer) return t('errFillAll');
   if (appData.admin) return 'Admin account already exists.';
   const uid = firebase.auth().currentUser?.uid || '';
-  dbRef('admin').set({ username, passwordHash: hashPassword(password), beitragsnummer, uid });
+  dbRef('admin').set({ username, passwordHash: hashPassword(password), uid });
+  dbRef('adminPrivate').set({ beitragsnummer });
+  startAdminPrivateListener();
   currentUserId = 'admin';
   return null;
 }
@@ -440,7 +462,10 @@ function startSecretListener(tenantId) {
 }
 
 function logout() {
-  if (currentUserId && currentUserId !== 'admin') {
+  if (currentUserId === 'admin') {
+    dbRef('adminPrivate').off();
+    appData.adminPrivate = null;
+  } else if (currentUserId) {
     dbRef(`secrets/${currentUserId}`).off();
   }
   tenantBeitragsnummer = null;
@@ -627,7 +652,7 @@ function doTogglePaid(id) {
   const newPaid = !tn.paid;
   dbRef(`tenants/${id}`).update({ paid: newPaid });
   if (newPaid) {
-    const bnr = appData.admin?.beitragsnummer;
+    const bnr = appData.adminPrivate?.beitragsnummer;
     if (bnr) dbRef(`secrets/${id}`).set({ beitragsnummer: bnr });
   } else {
     dbRef(`secrets/${id}`).remove();
