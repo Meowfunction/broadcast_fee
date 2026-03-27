@@ -32,27 +32,29 @@ body {
 /* ==============================
    LANG BAR
    ============================== */
+.lang-address {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 1000;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  color: #aaa;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
 .lang-bar {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: 0; right: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   padding: 6px 14px;
   background: rgba(255,253,240,0.92);
   backdrop-filter: blur(6px);
-  border-bottom: 1px solid #e8e0cc;
-}
-.lang-address {
-  font-size: 0.78rem;
-  color: #999;
-  letter-spacing: 0.02em;
-}
-.lang-btns {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  border-bottom-left-radius: 12px;
+  border: 1px solid #e8e0cc;
+  border-top: none; border-right: none;
 }
 .lang-btn {
   background: none;
