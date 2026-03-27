@@ -801,7 +801,7 @@ function init() {
   });
 
   // Enter key support
-  ['inRoom','inName','inPhone'].forEach(id =>
+  ['inRoom','inName'].forEach(id =>
     document.getElementById(id).addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('btnTenantLogin').click();
     })
