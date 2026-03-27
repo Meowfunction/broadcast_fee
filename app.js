@@ -729,8 +729,10 @@ const EGG_TYPES  = ['zigzag', 'dots', 'stripes'];
 function drawEggPath(ctx, rx, ry) {
   ctx.beginPath();
   ctx.moveTo(0, -ry);
-  ctx.bezierCurveTo( rx * 1.05, -ry * 0.85,  rx * 1.05, ry * 0.6,  0,  ry);
-  ctx.bezierCurveTo(-rx * 1.05,  ry * 0.6,  -rx * 1.05, -ry * 0.85, 0, -ry);
+  // Right side: narrower up top, wider and rounder at bottom
+  ctx.bezierCurveTo( rx * 0.88, -ry * 0.6,  rx, ry * 0.28,  0,  ry);
+  // Left side: mirror
+  ctx.bezierCurveTo(-rx,  ry * 0.28, -rx * 0.88, -ry * 0.6,  0, -ry);
   ctx.closePath();
 }
 
@@ -759,7 +761,7 @@ class EggParticle {
     if (this.y < -50) this.reset(cw, ch, false);
   }
   draw(ctx) {
-    const rx = this.size * 0.5, ry = this.size * 0.68;
+    const rx = this.size * 0.5, ry = this.size * 0.6;
     ctx.save();
     ctx.globalAlpha = this.alpha;
     ctx.translate(this.x, this.y);
