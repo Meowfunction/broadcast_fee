@@ -92,7 +92,8 @@ body {
 /* ==============================
    LOGIN
    ============================== */
-#loginPage {
+#loginPage,
+#detailsPage {
   display: flex;
   align-items: center;
   justify-content: center;
