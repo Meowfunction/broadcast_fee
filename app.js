@@ -613,6 +613,9 @@ function updateAdminTabUI() {
 // INIT
 // ==============================
 function init() {
+  // Apply translations immediately so text is visible regardless of Firebase state
+  setLang('en');
+
   // Check Firebase config
   if (!isConfigured()) {
     document.getElementById('loadingText').textContent = t('configError');
