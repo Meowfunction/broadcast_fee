@@ -226,8 +226,8 @@ function calcFee(tenant, allTenants) {
   const now = new Date();
   const curY = now.getFullYear(), curM = now.getMonth() + 1;
 
-  const reg = new Date(tenant.registrationDate);
-  let sy = reg.getFullYear(), sm = reg.getMonth() + 1;
+  // Fees are always retroactive from May 2025
+  let sy = 2025, sm = 5;
 
   let ey = curY, em = curM;
   if (tenant.deregistrationDate) {
