@@ -154,6 +154,8 @@ let currentUserId = null; // 'admin' or tenant id
 let appData = { admin: null, tenants: {} };
 let db = null;
 let paymentRevealed = false;
+let authReady = false;
+let tenantBeitragsnummer = null;
 
 function t(key) { return (T[lang] && T[lang][key]) || T.en[key] || key; }
 
@@ -362,8 +364,11 @@ function tenantLogin(room, name) {
   const tenants = getTenantsList();
   const existing = tenants.find(tn => tn.room === room);
 
+  const uid = firebase.auth().currentUser?.uid || '';
+
   if (existing) {
     if (existing.name.toLowerCase() !== name.toLowerCase()) return { error: t('errRoomTaken') };
+    if (uid && existing.uid !== uid) dbRef(`tenants/${existing.id}/uid`).set(uid);
     currentUserId = existing.id;
     return { error: null, isNew: false };
   }
@@ -371,7 +376,7 @@ function tenantLogin(room, name) {
   // New tenant — details filled in on the next page
   const id = generateId();
   dbRef(`tenants/${id}`).set({
-    id, room, name,
+    id, room, name, uid,
     phone: '',
     registrationDate: '',
     deregistrationDate: null,
@@ -408,6 +413,9 @@ function adminLogin(username, password) {
   if (!appData.admin) return t('errBadLogin');
   if (appData.admin.username !== username) return t('errBadLogin');
   if (appData.admin.passwordHash !== hashPassword(password)) return t('errBadLogin');
+  // Claim admin UID so Firebase Rules recognise this session as admin
+  const uid = firebase.auth().currentUser?.uid || '';
+  if (uid) dbRef('admin/uid').set(uid);
   currentUserId = 'admin';
   return null;
 }
@@ -416,12 +424,26 @@ function adminSetup(username, password, beitragsnummer) {
   username = username.trim(); beitragsnummer = beitragsnummer.trim();
   if (!username || !password || !beitragsnummer) return t('errFillAll');
   if (appData.admin) return 'Admin account already exists.';
-  dbRef('admin').set({ username, passwordHash: hashPassword(password), beitragsnummer });
+  const uid = firebase.auth().currentUser?.uid || '';
+  dbRef('admin').set({ username, passwordHash: hashPassword(password), beitragsnummer, uid });
   currentUserId = 'admin';
   return null;
 }
 
+function startSecretListener(tenantId) {
+  dbRef(`secrets/${tenantId}`).on('value', snapshot => {
+    tenantBeitragsnummer = snapshot.val()?.beitragsnummer || null;
+    if (!document.getElementById('mainPage').classList.contains('hidden')) {
+      renderPayment();
+    }
+  });
+}
+
 function logout() {
+  if (currentUserId && currentUserId !== 'admin') {
+    dbRef(`secrets/${currentUserId}`).off();
+  }
+  tenantBeitragsnummer = null;
   currentUserId = null;
   paymentRevealed = false;
   showPage('loginPage');
@@ -532,8 +554,8 @@ function renderPayment() {
 
   const fee = calcFee(me, getTenantsList());
 
-  // State 3: paid — show Beitragsnummer
-  if (me.paid && appData.admin && appData.admin.beitragsnummer) {
+  // State 3: paid — show Beitragsnummer (only populated if Firebase Rules allow it)
+  if (me.paid && tenantBeitragsnummer) {
     body.innerHTML = `
       <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('ibanLabel'))}</span>
         <strong>DE19 6725 0020 1019 1607 22</strong></p>
@@ -542,7 +564,7 @@ function renderPayment() {
       <p class="pay-hint">${escHtml(t('payHint').replace('{amount}', fmtEur(fee)))}</p>
       <div class="bnr-box">
         <p class="bnr-label">${escHtml(t('bnrLabel'))}</p>
-        <p class="bnr-value">${escHtml(appData.admin.beitragsnummer)}</p>
+        <p class="bnr-value">${escHtml(tenantBeitragsnummer)}</p>
         <p class="bnr-instructions">${escHtml(t('bnrInstructions'))}</p>
       </div>`;
     return;
@@ -602,7 +624,14 @@ function doDeregister(id) {
 function doTogglePaid(id) {
   const tn = getTenantsList().find(t => t.id === id);
   if (!tn) return;
-  dbRef(`tenants/${id}`).update({ paid: !tn.paid });
+  const newPaid = !tn.paid;
+  dbRef(`tenants/${id}`).update({ paid: newPaid });
+  if (newPaid) {
+    const bnr = appData.admin?.beitragsnummer;
+    if (bnr) dbRef(`secrets/${id}`).set({ beitragsnummer: bnr });
+  } else {
+    dbRef(`secrets/${id}`).remove();
+  }
 }
 
 function doDelete(id) {
@@ -673,8 +702,16 @@ function init() {
     return;
   }
 
-  startDataListener();
   initCookies();
+
+  // Silent anonymous auth — Firebase Rules use this UID to gate secret reads
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      if (!authReady) { authReady = true; startDataListener(); }
+    } else {
+      firebase.auth().signInAnonymously().catch(e => console.warn('Auth error:', e));
+    }
+  });
 
   // Language buttons
   document.getElementById('btnEN').addEventListener('click', () => setLang('en'));
@@ -700,6 +737,7 @@ function init() {
     );
     if (error) { showErr('tenantErr', error); return; }
     hideErr('tenantErr');
+    startSecretListener(currentUserId);
     if (isNew) {
       showDetailsPage();
     } else {
