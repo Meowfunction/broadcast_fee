@@ -13,6 +13,7 @@ const T = {
     lRoom: "Room Number",
     lName: "Full Name",
     lPhone: "Phone Number",
+    lRegDate: "Move-in Date",
     loginBtn: "Login / Register",
     setupNote: "First-time admin setup: create your credentials.",
     lSetupUser: "Username",
@@ -29,6 +30,7 @@ const T = {
     fLabelRoom: "Room",
     fLabelName: "Name",
     fLabelPhone: "Phone",
+    fLabelRegDate: "Move-in Date",
     btnSave: "Save",
     saveOk: "Saved!",
     tableTitle: "All Tenants",
@@ -72,6 +74,7 @@ const T = {
     lRoom: "Zimmernummer",
     lName: "Vollständiger Name",
     lPhone: "Telefonnummer",
+    lRegDate: "Einzugsdatum",
     loginBtn: "Anmelden / Registrieren",
     setupNote: "Ersteinrichtung: Erstellen Sie Ihre Admin-Zugangsdaten.",
     lSetupUser: "Benutzername",
@@ -88,6 +91,7 @@ const T = {
     fLabelRoom: "Zimmer",
     fLabelName: "Name",
     fLabelPhone: "Telefon",
+    fLabelRegDate: "Einzugsdatum",
     btnSave: "Speichern",
     saveOk: "Gespeichert!",
     tableTitle: "Alle Mieter",
@@ -226,8 +230,8 @@ function calcFee(tenant, allTenants) {
   const now = new Date();
   const curY = now.getFullYear(), curM = now.getMonth() + 1;
 
-  // Fees are always retroactive from May 2025
-  let sy = 2025, sm = 5;
+  const reg = new Date(tenant.registrationDate);
+  let sy = reg.getFullYear(), sm = reg.getMonth() + 1;
 
   let ey = curY, em = curM;
   if (tenant.deregistrationDate) {
@@ -273,13 +277,13 @@ function applyTranslations() {
     cookieText: 'cookieText', cookieAccept: 'cookieAccept', cookieDecline: 'cookieDecline',
     loginTitle: 'loginTitle', loginSub: 'loginSub',
     tabTenant: 'tabTenant', tabAdmin: 'tabAdmin',
-    lRoom: 'lRoom', lName: 'lName', lPhone: 'lPhone',
+    lRoom: 'lRoom', lName: 'lName', lPhone: 'lPhone', lRegDate: 'lRegDate',
     loginBtn: 'btnTenantLogin', setupNote: 'setupNote',
     lSetupUser: 'lSetupUser', lSetupPass: 'lSetupPass', lSetupBnr: 'lSetupBnr',
     btnAdminSetup: 'btnAdminSetup', lAdminUser: 'lAdminUser', lAdminPass: 'lAdminPass',
     btnAdminLogin: 'btnAdminLogin', logout: 'btnLogout', headerBlurb: 'headerBlurb',
     myInfoTitle: 'myInfoTitle', fLabelRoom: 'fLabelRoom', fLabelName: 'fLabelName',
-    fLabelPhone: 'fLabelPhone', btnSave: 'btnSave', saveOk: 'saveOk',
+    fLabelPhone: 'fLabelPhone', fLabelRegDate: 'fLabelRegDate', btnSave: 'btnSave', saveOk: 'saveOk',
     tableTitle: 'tableTitle', thRoom: 'thRoom', thName: 'thName', thPhone: 'thPhone',
     thReg: 'thReg', thFee: 'thFee', thPaid: 'thPaid', thAct: 'thAct',
     payTitle: 'payTitle', bnrLabel: 'bnrLabel', bnrInstructions: 'bnrInstructions',
@@ -325,31 +329,32 @@ function showPage(name) {
 // ==============================
 // AUTH
 // ==============================
-function tenantLogin(room, name, phone) {
+function tenantLogin(room, name, phone, regMonth) {
   room = room.trim(); name = name.trim(); phone = phone.trim();
-  if (!room || !name) return t('errFillAll');
+  if (!room || !name || !regMonth) return t('errFillAll');
 
   const tenants = getTenantsList();
   const existing = tenants.find(tn => tn.room === room);
 
   if (existing) {
     if (existing.name.toLowerCase() !== name.toLowerCase()) return t('errRoomTaken');
-    // Update phone if provided
-    if (phone && phone !== existing.phone) {
-      dbRef(`tenants/${existing.id}`).update({ phone });
-    }
+    // Allow updating phone and move-in date
+    const updates = {};
+    if (phone && phone !== existing.phone) updates.phone = phone;
+    if (regMonth && (regMonth + '-01') !== existing.registrationDate) updates.registrationDate = regMonth + '-01';
+    if (Object.keys(updates).length) dbRef(`tenants/${existing.id}`).update(updates);
     currentUserId = existing.id;
     return null;
   }
 
-  // New tenant
+  // New tenant — registrationDate from move-in month they entered
   const id = generateId();
   const newTenant = {
     id,
     room,
     name,
     phone: phone || '',
-    registrationDate: new Date().toISOString().slice(0, 10),
+    registrationDate: regMonth + '-01',
     deregistrationDate: null,
     paid: false
   };
@@ -402,9 +407,11 @@ function renderMain() {
     myCard.classList.remove('hidden');
     const me = getTenantsList().find(tn => tn.id === currentUserId);
     if (me) {
-      document.getElementById('fRoom').value  = me.room;
-      document.getElementById('fName').value  = me.name;
-      document.getElementById('fPhone').value = me.phone;
+      document.getElementById('fRoom').value    = me.room;
+      document.getElementById('fName').value    = me.name;
+      document.getElementById('fPhone').value   = me.phone;
+      // Convert YYYY-MM-DD to YYYY-MM for the month input
+      document.getElementById('fRegDate').value = me.registrationDate ? me.registrationDate.slice(0, 7) : '';
     }
   }
 
@@ -495,16 +502,17 @@ function renderPayment() {
 // ACTIONS
 // ==============================
 function saveMyInfo() {
-  const room  = document.getElementById('fRoom').value.trim();
-  const name  = document.getElementById('fName').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  if (!room || !name) { showSaveMsg(false); return; }
+  const room     = document.getElementById('fRoom').value.trim();
+  const name     = document.getElementById('fName').value.trim();
+  const phone    = document.getElementById('fPhone').value.trim();
+  const regMonth = document.getElementById('fRegDate').value;
+  if (!room || !name || !regMonth) { showSaveMsg(false); return; }
 
   const tenants = getTenantsList();
   const conflict = tenants.find(tn => tn.room === room && tn.id !== currentUserId);
   if (conflict) { showSaveMsg(false); return; }
 
-  dbRef(`tenants/${currentUserId}`).update({ room, name, phone });
+  dbRef(`tenants/${currentUserId}`).update({ room, name, phone, registrationDate: regMonth + '-01' });
   showSaveMsg(true);
 }
 
@@ -615,7 +623,8 @@ function init() {
     const err = tenantLogin(
       document.getElementById('inRoom').value,
       document.getElementById('inName').value,
-      document.getElementById('inPhone').value
+      document.getElementById('inPhone').value,
+      document.getElementById('inRegDate').value
     );
     if (err) { showErr('tenantErr', err); return; }
     hideErr('tenantErr');
