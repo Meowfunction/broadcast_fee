@@ -117,7 +117,7 @@ const T = {
     thName: "Name",
     thPhone: "Telefon",
     thReg: "Registrierungsdatum",
-    thFee: "Gesch. Ausstehender Betrag",
+    thFee: "Gesch.<br>Ausstehender Betrag",
     thPaid: "Bezahlt",
     thAct: "Aktionen",
     badgePaid: "Bezahlt",
@@ -336,7 +336,7 @@ function applyTranslations() {
     myInfoTitle: 'myInfoTitle', fLabelRoom: 'fLabelRoom', fLabelName: 'fLabelName',
     fLabelPhone: 'fLabelPhone', fLabelRegDate: 'fLabelRegDate', btnSave: 'btnSave', saveOk: 'saveOk',
     tableTitle: 'tableTitle', thRoom: 'thRoom', thName: 'thName', thPhone: 'thPhone',
-    thReg: 'thReg', thFee: 'thFee', thPaid: 'thPaid', thAct: 'thAct',
+    thReg: 'thReg', thPaid: 'thPaid', thAct: 'thAct',
     payTitle: 'payTitle',
     yes: 'modalYes', no: 'modalNo', connecting: 'loadingText',
   };
@@ -344,6 +344,9 @@ function applyTranslations() {
     const el = document.getElementById(elId);
     if (el) el.textContent = t(key);
   }
+  // thFee uses innerHTML to allow <br> in DE translation
+  const thFeeEl = document.getElementById('thFee');
+  if (thFeeEl) thFeeEl.innerHTML = t('thFee');
   // Re-render dynamic parts if on main page
   if (!document.getElementById('mainPage').classList.contains('hidden')) {
     renderTable();
@@ -718,6 +721,139 @@ function updateAdminTabUI() {
 }
 
 // ==============================
+// EASTER EGG PARTICLES
+// ==============================
+const EGG_COLORS = ['#9B59B6', '#27AE60', '#E91E63', '#FF9800'];
+const EGG_TYPES  = ['zigzag', 'dots', 'stripes'];
+
+function drawEggPath(ctx, rx, ry) {
+  ctx.beginPath();
+  ctx.moveTo(0, -ry);
+  ctx.bezierCurveTo( rx * 1.05, -ry * 0.85,  rx * 1.05, ry * 0.6,  0,  ry);
+  ctx.bezierCurveTo(-rx * 1.05,  ry * 0.6,  -rx * 1.05, -ry * 0.85, 0, -ry);
+  ctx.closePath();
+}
+
+class EggParticle {
+  constructor(cw, ch) {
+    this.reset(cw, ch, true);
+  }
+  reset(cw, ch, initial) {
+    this.x     = Math.random() * cw;
+    this.y     = initial ? Math.random() * ch : ch + 40;
+    this.vy    = -(0.22 + Math.random() * 0.42);
+    this.vx    = (Math.random() - 0.5) * 0.18;
+    this.drift = Math.random() * Math.PI * 2;
+    this.rot   = Math.random() * Math.PI * 2;
+    this.rotV  = (Math.random() - 0.5) * 0.013;
+    this.size  = 15 + Math.random() * 17;
+    this.color = EGG_COLORS[Math.floor(Math.random() * EGG_COLORS.length)];
+    this.type  = EGG_TYPES [Math.floor(Math.random() * EGG_TYPES.length)];
+    this.alpha = 0.48 + Math.random() * 0.35;
+  }
+  update(cw, ch) {
+    this.drift += 0.016;
+    this.x  += this.vx + Math.sin(this.drift) * 0.38;
+    this.y  += this.vy;
+    this.rot += this.rotV;
+    if (this.y < -50) this.reset(cw, ch, false);
+  }
+  draw(ctx) {
+    const rx = this.size * 0.5, ry = this.size * 0.68;
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+
+    // Base egg fill
+    drawEggPath(ctx, rx, ry);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+
+    // Clip decorations inside egg
+    ctx.save();
+    drawEggPath(ctx, rx, ry);
+    ctx.clip();
+
+    const W = rx * 2, H = ry * 2;
+
+    if (this.type === 'zigzag') {
+      ctx.strokeStyle = 'rgba(255,255,255,0.82)';
+      ctx.lineWidth   = this.size * 0.11;
+      ctx.lineJoin    = 'miter';
+      const n = 5, amp = H * 0.12;
+      const sw = W / (n - 1);
+      ctx.beginPath();
+      ctx.moveTo(-rx, 0);
+      for (let i = 0; i < n; i++) {
+        ctx.lineTo(-rx + i * sw, i % 2 === 0 ? -amp : amp);
+      }
+      ctx.lineTo(rx, 0);
+      ctx.stroke();
+    } else if (this.type === 'dots') {
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
+      const r = this.size * 0.1;
+      [
+        [0, -ry * 0.44], [-rx * 0.48, -ry * 0.06],
+        [rx * 0.48,  ry * 0.06], [0, ry * 0.38],
+        [-rx * 0.38, ry * 0.38], [rx * 0.38, -ry * 0.42]
+      ].forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.arc(dx, dy, r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    } else { // stripes
+      ctx.fillStyle = 'rgba(255,255,255,0.58)';
+      const sh = H * 0.14;
+      [-H * 0.3, 0, H * 0.3].forEach(yOff => {
+        ctx.fillRect(-rx, yOff - sh / 2, W, sh);
+      });
+    }
+
+    ctx.restore(); // pop clip
+    ctx.restore(); // pop translate/rotate/alpha
+  }
+}
+
+function initEggCanvas(container, count) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  container.insertBefore(canvas, container.firstChild);
+
+  let particles = [], sized = false;
+
+  function resize() {
+    const cw = container.offsetWidth, ch = container.offsetHeight;
+    if (!cw || !ch) { sized = false; return; }
+    canvas.width  = cw;
+    canvas.height = ch;
+    if (!sized) {
+      particles = Array.from({length: count}, () => new EggParticle(cw, ch));
+      sized = true;
+    }
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (!canvas.width || !canvas.height) { resize(); return; }
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(canvas.width, canvas.height); p.draw(ctx); });
+  }
+
+  new ResizeObserver(resize).observe(container);
+  resize();
+  animate();
+}
+
+function initEasterEggs() {
+  initEggCanvas(document.getElementById('loginPage'),   14);
+  initEggCanvas(document.getElementById('detailsPage'), 10);
+  const header = document.querySelector('.site-header');
+  if (header) initEggCanvas(header, 8);
+}
+
+// ==============================
 // INIT
 // ==============================
 function init() {
@@ -740,6 +876,7 @@ function init() {
   }
 
   initCookies();
+  initEasterEggs();
 
   // Silent anonymous auth — Firebase Rules use this UID to gate secret reads
   firebase.auth().onAuthStateChanged(user => {

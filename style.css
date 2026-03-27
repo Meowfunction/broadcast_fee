@@ -94,6 +94,7 @@ body {
    ============================== */
 #loginPage,
 #detailsPage {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,6 +103,8 @@ body {
   min-height: 100vh;
 }
 .login-card {
+  position: relative;
+  z-index: 1;
   background: #fff;
   border-radius: 24px;
   box-shadow: var(--shadow);
@@ -221,10 +224,14 @@ body {
    HEADER
    ============================== */
 .site-header {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--yellow) 0%, var(--green) 100%);
   padding: 20px 24px 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
+.header-row,
+.header-blurb { position: relative; z-index: 1; }
 .header-row {
   display: flex;
   align-items: center;
@@ -311,7 +318,7 @@ th {
   color: var(--mid);
   white-space: nowrap;
 }
-#thFee { white-space: normal; max-width: 90px; }
+#thFee { white-space: normal; }
 td {
   padding: 10px 12px;
   border-bottom: 1px solid #f0ead8;
