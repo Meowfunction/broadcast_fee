@@ -795,17 +795,12 @@ class EggParticle {
       ctx.lineTo(rx, 0);
       ctx.stroke();
     } else if (this.type === 'dots') {
-      ctx.fillStyle = 'rgba(255,255,255,0.82)';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
       const r = this.size * 0.09;
-      // 1-2-2-1 grid, widths scaled to egg shape
-      [
-        [0,           -ry * 0.52],
-        [-rx * 0.38,  -ry * 0.15], [rx * 0.38, -ry * 0.15],
-        [-rx * 0.42,   ry * 0.22], [rx * 0.42,  ry * 0.22],
-        [0,            ry * 0.54],
-      ].forEach(([dx, dy]) => {
+      const gap = rx * 0.52;
+      [-1.5, -0.5, 0.5, 1.5].forEach(i => {
         ctx.beginPath();
-        ctx.arc(dx, dy, r, 0, Math.PI * 2);
+        ctx.arc(i * gap, 0, r, 0, Math.PI * 2);
         ctx.fill();
       });
     } else { // stripes
