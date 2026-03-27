@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rundfunkbeitrag – Schwetzinger Str. 1</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Cookie Consent Banner -->
+  <div id="cookieBanner" class="cookie-banner hidden">
+    <div class="cookie-inner">
+      <p id="cookieText"></p>
+      <div class="cookie-btns">
+        <button id="cookieAccept" class="btn btn-primary"></button>
+        <button id="cookieDecline" class="btn btn-ghost"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Language switcher (always visible) -->
+  <div class="lang-bar">
+    <button id="btnEN" class="lang-btn active">EN</button>
+    <span class="lang-sep">|</span>
+    <button id="btnDE" class="lang-btn">DE</button>
+  </div>
+
+  <!-- ==================== LOGIN PAGE ==================== -->
+  <div id="loginPage" class="page">
+    <div class="login-card">
+      <div class="login-logo">🏠</div>
+      <h1 id="loginTitle"></h1>
+      <p id="loginSub"></p>
+
+      <div class="tab-row">
+        <button class="tab-btn active" data-tab="tenant" id="tabTenant"></button>
+        <button class="tab-btn" data-tab="admin" id="tabAdmin"></button>
+      </div>
+
+      <!-- Tenant tab -->
+      <div id="pTenant" class="tab-pane">
+        <div class="field-group">
+          <label id="lRoom"></label>
+          <input id="inRoom" type="text" autocomplete="off">
+        </div>
+        <div class="field-group">
+          <label id="lName"></label>
+          <input id="inName" type="text" autocomplete="off">
+        </div>
+        <div class="field-group">
+          <label id="lPhone"></label>
+          <input id="inPhone" type="tel" autocomplete="off">
+        </div>
+        <button id="btnTenantLogin" class="btn btn-primary full"></button>
+        <p id="tenantErr" class="err-msg hidden"></p>
+      </div>
+
+      <!-- Admin tab -->
+      <div id="pAdmin" class="tab-pane hidden">
+        <!-- First-time setup -->
+        <div id="adminSetup" class="hidden">
+          <p id="setupNote" class="info-note"></p>
+          <div class="field-group">
+            <label id="lSetupUser"></label>
+            <input id="inSetupUser" type="text" autocomplete="off">
+          </div>
+          <div class="field-group">
+            <label id="lSetupPass"></label>
+            <input id="inSetupPass" type="password">
+          </div>
+          <div class="field-group">
+            <label id="lSetupBnr"></label>
+            <input id="inSetupBnr" type="text" placeholder="12 345 678 9">
+          </div>
+          <button id="btnAdminSetup" class="btn btn-primary full"></button>
+          <p id="setupErr" class="err-msg hidden"></p>
+        </div>
+        <!-- Normal login -->
+        <div id="adminLogin">
+          <div class="field-group">
+            <label id="lAdminUser"></label>
+            <input id="inAdminUser" type="text" autocomplete="off">
+          </div>
+          <div class="field-group">
+            <label id="lAdminPass"></label>
+            <input id="inAdminPass" type="password">
+          </div>
+          <button id="btnAdminLogin" class="btn btn-primary full"></button>
+          <p id="adminErr" class="err-msg hidden"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN PAGE ==================== -->
+  <div id="mainPage" class="page hidden">
+    <header class="site-header">
+      <div class="header-row">
+        <h1 class="site-title">🏠 Rundfunkbeitrag</h1>
+        <div class="header-right">
+          <span id="welcomeSpan" class="welcome-text"></span>
+          <button id="btnLogout" class="btn btn-ghost-sm"></button>
+        </div>
+      </div>
+      <p id="headerBlurb" class="header-blurb"></p>
+    </header>
+
+    <main class="content">
+
+      <!-- My Info (tenants only) -->
+      <section id="myInfoCard" class="card card-yellow hidden">
+        <h2 id="myInfoTitle"></h2>
+        <div class="form-row">
+          <div class="field-group">
+            <label id="fLabelRoom"></label>
+            <input id="fRoom" type="text">
+          </div>
+          <div class="field-group">
+            <label id="fLabelName"></label>
+            <input id="fName" type="text">
+          </div>
+          <div class="field-group">
+            <label id="fLabelPhone"></label>
+            <input id="fPhone" type="tel">
+          </div>
+          <button id="btnSave" class="btn btn-primary"></button>
+        </div>
+        <p id="saveOk" class="ok-msg hidden"></p>
+      </section>
+
+      <!-- Table -->
+      <section class="card card-blue">
+        <h2 id="tableTitle"></h2>
+        <div class="table-wrap">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th id="thRoom"></th>
+                <th id="thName"></th>
+                <th id="thPhone"></th>
+                <th id="thReg"></th>
+                <th id="thFee"></th>
+                <th id="thPaid"></th>
+                <th id="thAct"></th>
+              </tr>
+            </thead>
+            <tbody id="tblBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Payment -->
+      <section class="card card-pink" id="payCard">
+        <h2 id="payTitle"></h2>
+        <p id="payText" class="pay-text"></p>
+        <div id="bnrBox" class="bnr-box hidden">
+          <p id="bnrLabel" class="bnr-label"></p>
+          <p id="bnrValue" class="bnr-value"></p>
+          <p id="bnrInstructions" class="bnr-instructions"></p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <p id="modalText"></p>
+      <div class="modal-btns">
+        <button id="modalYes" class="btn btn-danger"></button>
+        <button id="modalNo" class="btn btn-ghost"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading" class="loading-overlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <p id="loadingText">Connecting…</p>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (compat v9) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Your Firebase config — fill in firebase-config.js -->
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
