@@ -14,7 +14,13 @@ const T = {
     lName: "Full Name",
     lPhone: "Phone Number",
     lRegDate: "Move-in Date",
-    loginBtn: "Login / Register",
+    loginBtn: "Continue",
+    detailsTitle: "Your Details",
+    detailsSub: "Fill in your contact info and move-in date. You can update this anytime.",
+    dLabelPhone: "Phone Number",
+    dLabelRegDate: "Move-in Date",
+    btnSaveDetails: "Save & Continue",
+    btnEditDetails: "Edit My Details",
     setupNote: "First-time admin setup: create your credentials.",
     lSetupUser: "Username",
     lSetupPass: "Password",
@@ -75,7 +81,13 @@ const T = {
     lName: "Vollständiger Name",
     lPhone: "Telefonnummer",
     lRegDate: "Einzugsdatum",
-    loginBtn: "Anmelden / Registrieren",
+    loginBtn: "Weiter",
+    detailsTitle: "Ihre Angaben",
+    detailsSub: "Geben Sie Ihre Kontaktdaten und Ihr Einzugsdatum ein. Sie können dies jederzeit ändern.",
+    dLabelPhone: "Telefonnummer",
+    dLabelRegDate: "Einzugsdatum",
+    btnSaveDetails: "Speichern & Weiter",
+    btnEditDetails: "Angaben bearbeiten",
     setupNote: "Ersteinrichtung: Erstellen Sie Ihre Admin-Zugangsdaten.",
     lSetupUser: "Benutzername",
     lSetupPass: "Passwort",
@@ -277,8 +289,11 @@ function applyTranslations() {
     cookieText: 'cookieText', cookieAccept: 'cookieAccept', cookieDecline: 'cookieDecline',
     loginTitle: 'loginTitle', loginSub: 'loginSub',
     tabTenant: 'tabTenant', tabAdmin: 'tabAdmin',
-    lRoom: 'lRoom', lName: 'lName', lPhone: 'lPhone', lRegDate: 'lRegDate',
-    loginBtn: 'btnTenantLogin', setupNote: 'setupNote',
+    lRoom: 'lRoom', lName: 'lName',
+    loginBtn: 'btnTenantLogin',
+    detailsTitle: 'detailsTitle', detailsSub: 'detailsSub',
+    dLabelPhone: 'dLabelPhone', dLabelRegDate: 'dLabelRegDate',
+    btnSaveDetails: 'btnSaveDetails', btnEditDetails: 'btnEditDetails', setupNote: 'setupNote',
     lSetupUser: 'lSetupUser', lSetupPass: 'lSetupPass', lSetupBnr: 'lSetupBnr',
     btnAdminSetup: 'btnAdminSetup', lAdminUser: 'lAdminUser', lAdminPass: 'lAdminPass',
     btnAdminLogin: 'btnAdminLogin', logout: 'btnLogout', headerBlurb: 'headerBlurb',
@@ -321,46 +336,61 @@ document.getElementById('cookieDecline').addEventListener('click', () => {
 // ROUTING
 // ==============================
 function showPage(name) {
-  document.getElementById('loginPage').classList.add('hidden');
-  document.getElementById('mainPage').classList.add('hidden');
+  ['loginPage', 'detailsPage', 'mainPage'].forEach(id =>
+    document.getElementById(id).classList.add('hidden')
+  );
   document.getElementById(name).classList.remove('hidden');
 }
 
 // ==============================
 // AUTH
 // ==============================
-function tenantLogin(room, name, phone, regMonth) {
-  room = room.trim(); name = name.trim(); phone = phone.trim();
-  if (!room || !name || !regMonth) return t('errFillAll');
+function tenantLogin(room, name) {
+  room = room.trim(); name = name.trim();
+  if (!room || !name) return t('errFillAll');
 
   const tenants = getTenantsList();
   const existing = tenants.find(tn => tn.room === room);
 
   if (existing) {
     if (existing.name.toLowerCase() !== name.toLowerCase()) return t('errRoomTaken');
-    // Allow updating phone and move-in date
-    const updates = {};
-    if (phone && phone !== existing.phone) updates.phone = phone;
-    if (regMonth && (regMonth + '-01') !== existing.registrationDate) updates.registrationDate = regMonth + '-01';
-    if (Object.keys(updates).length) dbRef(`tenants/${existing.id}`).update(updates);
     currentUserId = existing.id;
     return null;
   }
 
-  // New tenant — registrationDate from move-in month they entered
+  // New tenant — details filled in on the next page
   const id = generateId();
-  const newTenant = {
-    id,
-    room,
-    name,
-    phone: phone || '',
-    registrationDate: regMonth + '-01',
+  dbRef(`tenants/${id}`).set({
+    id, room, name,
+    phone: '',
+    registrationDate: '',
     deregistrationDate: null,
     paid: false
-  };
-  dbRef(`tenants/${id}`).set(newTenant);
+  });
   currentUserId = id;
   return null;
+}
+
+function showDetailsPage() {
+  const me = getTenantsList().find(tn => tn.id === currentUserId);
+  if (me) {
+    document.getElementById('dPhone').value   = me.phone || '';
+    document.getElementById('dRegDate').value = me.registrationDate ? me.registrationDate.slice(0, 7) : '';
+  }
+  showPage('detailsPage');
+}
+
+function saveDetails() {
+  const phone    = document.getElementById('dPhone').value.trim();
+  const regMonth = document.getElementById('dRegDate').value;
+  if (!regMonth) { showErr('detailsErr', t('errFillAll')); return; }
+  dbRef(`tenants/${currentUserId}`).update({
+    phone,
+    registrationDate: regMonth + '-01'
+  });
+  hideErr('detailsErr');
+  showPage('mainPage');
+  renderMain();
 }
 
 function adminLogin(username, password) {
@@ -384,7 +414,7 @@ function adminSetup(username, password, beitragsnummer) {
 function logout() {
   currentUserId = null;
   showPage('loginPage');
-  ['inRoom','inName','inPhone','inAdminUser','inAdminPass','inSetupUser','inSetupPass','inSetupBnr']
+  ['inRoom','inName','dPhone','dRegDate','inAdminUser','inAdminPass','inSetupUser','inSetupPass','inSetupBnr']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   hideErr('tenantErr'); hideErr('adminErr');
 }
@@ -409,8 +439,7 @@ function renderMain() {
     if (me) {
       document.getElementById('fRoom').value    = me.room;
       document.getElementById('fName').value    = me.name;
-      document.getElementById('fPhone').value   = me.phone;
-      // Convert YYYY-MM-DD to YYYY-MM for the month input
+      document.getElementById('fPhone').value   = me.phone || '';
       document.getElementById('fRegDate').value = me.registrationDate ? me.registrationDate.slice(0, 7) : '';
     }
   }
@@ -622,15 +651,16 @@ function init() {
   document.getElementById('btnTenantLogin').addEventListener('click', () => {
     const err = tenantLogin(
       document.getElementById('inRoom').value,
-      document.getElementById('inName').value,
-      document.getElementById('inPhone').value,
-      document.getElementById('inRegDate').value
+      document.getElementById('inName').value
     );
     if (err) { showErr('tenantErr', err); return; }
     hideErr('tenantErr');
-    showPage('mainPage');
-    renderMain();
+    showDetailsPage();
   });
+
+  document.getElementById('btnSaveDetails').addEventListener('click', saveDetails);
+
+  document.getElementById('btnEditDetails').addEventListener('click', showDetailsPage);
 
   // Admin setup
   document.getElementById('btnAdminSetup').addEventListener('click', () => {

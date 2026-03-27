@@ -48,14 +48,6 @@
           <label id="lName"></label>
           <input id="inName" type="text" autocomplete="off">
         </div>
-        <div class="field-group">
-          <label id="lPhone"></label>
-          <input id="inPhone" type="tel" autocomplete="off">
-        </div>
-        <div class="field-group">
-          <label id="lRegDate"></label>
-          <input id="inRegDate" type="month" min="2025-05">
-        </div>
         <button id="btnTenantLogin" class="btn btn-primary full"></button>
         <p id="tenantErr" class="err-msg hidden"></p>
       </div>
@@ -97,6 +89,25 @@
     </div>
   </div>
 
+  <!-- ==================== DETAILS PAGE ==================== -->
+  <div id="detailsPage" class="page hidden">
+    <div class="login-card details-card">
+      <div class="login-logo">📋</div>
+      <h1 id="detailsTitle"></h1>
+      <p id="detailsSub"></p>
+      <div class="field-group">
+        <label id="dLabelPhone"></label>
+        <input id="dPhone" type="tel" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label id="dLabelRegDate"></label>
+        <input id="dRegDate" type="month" min="2025-05">
+      </div>
+      <button id="btnSaveDetails" class="btn btn-primary full"></button>
+      <p id="detailsErr" class="err-msg hidden"></p>
+    </div>
+  </div>
+
   <!-- ==================== MAIN PAGE ==================== -->
   <div id="mainPage" class="page hidden">
     <header class="site-header">
@@ -133,6 +144,7 @@
             <input id="fRegDate" type="month" min="2025-05">
           </div>
           <button id="btnSave" class="btn btn-primary"></button>
+          <button id="btnEditDetails" class="btn btn-ghost"></button>
         </div>
         <p id="saveOk" class="ok-msg hidden"></p>
       </section>
