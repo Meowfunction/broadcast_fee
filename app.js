@@ -55,9 +55,13 @@ const T = {
     btnMarkUnpaid: "Mark Unpaid",
     btnDelete: "Delete",
     payTitle: "Payment Information",
-    payText: "Please pay {amount} to IBAN: DE19 6725 0020 1019 1607 22 / Beneficiary: Siar Amin",
+    bnrUnknown: "Beitragsnummer: Unknown",
+    btnPay: "Pay",
+    ibanLabel: "IBAN",
+    beneficiaryLabel: "Beneficiary",
+    payHint: "Please pay {amount} to the account above. Once confirmed by the admin, your Beitragsnummer will be revealed here so you can link it to your account.",
     bnrLabel: "Your Beitragsnummer:",
-    bnrInstructions: "Use this number to bind your account to the main Rundfunkbeitrag account.",
+    bnrInstructions: "You can now link this number to your Rundfunkbeitrag account.",
     yes: "Yes",
     no: "No",
     confirmDeregister: "Are you sure you want to deregister? This marks you as moved out.",
@@ -122,9 +126,13 @@ const T = {
     btnMarkUnpaid: "Als unbezahlt markieren",
     btnDelete: "Löschen",
     payTitle: "Zahlungsinformationen",
-    payText: "Bitte zahlen Sie {amount} an IBAN: DE19 6725 0020 1019 1607 22 / Begünstigter: Siar Amin",
+    bnrUnknown: "Beitragsnummer: Unbekannt",
+    btnPay: "Bezahlen",
+    ibanLabel: "IBAN",
+    beneficiaryLabel: "Begünstigter",
+    payHint: "Bitte zahlen Sie {amount} an das obige Konto. Sobald der Admin die Zahlung bestätigt, wird Ihre Beitragsnummer hier angezeigt, damit Sie sie mit Ihrem Konto verknüpfen können.",
     bnrLabel: "Ihre Beitragsnummer:",
-    bnrInstructions: "Nutzen Sie diese Nummer, um Ihr Konto mit dem Hauptkonto zu verknüpfen.",
+    bnrInstructions: "Sie können diese Nummer jetzt mit Ihrem Rundfunkbeitragskonto verknüpfen.",
     yes: "Ja",
     no: "Nein",
     confirmDeregister: "Möchten Sie sich wirklich abmelden? Das bedeutet, Sie sind ausgezogen.",
@@ -145,6 +153,7 @@ let lang = 'en';
 let currentUserId = null; // 'admin' or tenant id
 let appData = { admin: null, tenants: {} };
 let db = null;
+let paymentRevealed = false;
 
 function t(key) { return (T[lang] && T[lang][key]) || T.en[key] || key; }
 
@@ -301,7 +310,7 @@ function applyTranslations() {
     fLabelPhone: 'fLabelPhone', fLabelRegDate: 'fLabelRegDate', btnSave: 'btnSave', saveOk: 'saveOk',
     tableTitle: 'tableTitle', thRoom: 'thRoom', thName: 'thName', thPhone: 'thPhone',
     thReg: 'thReg', thFee: 'thFee', thPaid: 'thPaid', thAct: 'thAct',
-    payTitle: 'payTitle', bnrLabel: 'bnrLabel', bnrInstructions: 'bnrInstructions',
+    payTitle: 'payTitle',
     yes: 'modalYes', no: 'modalNo', connecting: 'loadingText',
   };
   for (const [key, elId] of Object.entries(ids)) {
@@ -414,6 +423,7 @@ function adminSetup(username, password, beitragsnummer) {
 
 function logout() {
   currentUserId = null;
+  paymentRevealed = false;
   showPage('loginPage');
   ['inRoom','inName','dPhone','dRegDate','inAdminUser','inAdminPass','inSetupUser','inSetupPass','inSetupBnr']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -505,11 +515,15 @@ function renderTable() {
 }
 
 function renderPayment() {
+  const body = document.getElementById('payBody');
   const isAdmin = currentUserId === 'admin';
+
   if (isAdmin) {
-    document.getElementById('payText').innerHTML =
-      `IBAN: <strong>DE19 6725 0020 1019 1607 22</strong> / Siar Amin`;
-    document.getElementById('bnrBox').classList.add('hidden');
+    body.innerHTML = `
+      <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('ibanLabel'))}</span>
+        <strong>DE19 6725 0020 1019 1607 22</strong></p>
+      <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('beneficiaryLabel'))}</span>
+        <strong>Siar Amin</strong></p>`;
     return;
   }
 
@@ -517,15 +531,42 @@ function renderPayment() {
   if (!me) return;
 
   const fee = calcFee(me, getTenantsList());
-  const payTpl = t('payText').replace('{amount}', `<strong>${fmtEur(fee)}</strong>`);
-  document.getElementById('payText').innerHTML = payTpl;
 
+  // State 3: paid — show Beitragsnummer
   if (me.paid && appData.admin && appData.admin.beitragsnummer) {
-    document.getElementById('bnrBox').classList.remove('hidden');
-    document.getElementById('bnrValue').textContent = appData.admin.beitragsnummer;
-  } else {
-    document.getElementById('bnrBox').classList.add('hidden');
+    body.innerHTML = `
+      <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('ibanLabel'))}</span>
+        <strong>DE19 6725 0020 1019 1607 22</strong></p>
+      <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('beneficiaryLabel'))}</span>
+        <strong>Siar Amin</strong></p>
+      <p class="pay-hint">${escHtml(t('payHint').replace('{amount}', fmtEur(fee)))}</p>
+      <div class="bnr-box">
+        <p class="bnr-label">${escHtml(t('bnrLabel'))}</p>
+        <p class="bnr-value">${escHtml(appData.admin.beitragsnummer)}</p>
+        <p class="bnr-instructions">${escHtml(t('bnrInstructions'))}</p>
+      </div>`;
+    return;
   }
+
+  // State 2: pay button tapped — show IBAN
+  if (paymentRevealed) {
+    body.innerHTML = `
+      <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('ibanLabel'))}</span>
+        <strong>DE19 6725 0020 1019 1607 22</strong></p>
+      <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('beneficiaryLabel'))}</span>
+        <strong>Siar Amin</strong></p>
+      <p class="pay-hint">${escHtml(t('payHint').replace('{amount}', fmtEur(fee)))}</p>`;
+    return;
+  }
+
+  // State 1: default — unknown Beitragsnummer + Pay button
+  body.innerHTML = `
+    <p class="bnr-unknown">${escHtml(t('bnrUnknown'))}</p>
+    <button class="btn btn-primary" id="btnRevealPay">${escHtml(t('btnPay'))}</button>`;
+  document.getElementById('btnRevealPay').addEventListener('click', () => {
+    paymentRevealed = true;
+    renderPayment();
+  });
 }
 
 // ==============================

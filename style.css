@@ -328,12 +328,39 @@ tbody tr.moved-out { opacity: 0.55; }
 /* ==============================
    PAYMENT
    ============================== */
-.pay-text {
+.bnr-unknown {
   font-size: 1rem;
-  line-height: 1.7;
+  font-weight: 700;
+  color: var(--mid);
+  margin-bottom: 16px;
+  letter-spacing: 0.02em;
+}
+.pay-iban-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.97rem;
+  margin-bottom: 8px;
   color: var(--dark);
 }
-.pay-text strong { font-size: 1.15rem; color: #a02040; }
+.pay-iban-key {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mid);
+  min-width: 90px;
+}
+.pay-iban-line strong { font-size: 1rem; letter-spacing: 0.03em; }
+.pay-hint {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--mid);
+  background: var(--yellow-light);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
 .bnr-box {
   margin-top: 16px;
   background: var(--green-light);
