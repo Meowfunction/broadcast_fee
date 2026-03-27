@@ -848,6 +848,8 @@ function initEggCanvas(container, count) {
 }
 
 function initEasterEggs() {
+  const m = new Date().getMonth() + 1; // 1-based
+  if (m !== 3 && m !== 4) return;      // only March and April
   initEggCanvas(document.getElementById('loginPage'),   14);
   initEggCanvas(document.getElementById('detailsPage'), 10);
   const header = document.querySelector('.site-header');
