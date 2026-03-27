@@ -345,17 +345,18 @@ function showPage(name) {
 // ==============================
 // AUTH
 // ==============================
+// Returns { error, isNew }
 function tenantLogin(room, name) {
   room = room.trim(); name = name.trim();
-  if (!room || !name) return t('errFillAll');
+  if (!room || !name) return { error: t('errFillAll') };
 
   const tenants = getTenantsList();
   const existing = tenants.find(tn => tn.room === room);
 
   if (existing) {
-    if (existing.name.toLowerCase() !== name.toLowerCase()) return t('errRoomTaken');
+    if (existing.name.toLowerCase() !== name.toLowerCase()) return { error: t('errRoomTaken') };
     currentUserId = existing.id;
-    return null;
+    return { error: null, isNew: false };
   }
 
   // New tenant — details filled in on the next page
@@ -368,7 +369,7 @@ function tenantLogin(room, name) {
     paid: false
   });
   currentUserId = id;
-  return null;
+  return { error: null, isNew: true };
 }
 
 function showDetailsPage() {
@@ -652,13 +653,18 @@ function init() {
 
   // Tenant login
   document.getElementById('btnTenantLogin').addEventListener('click', () => {
-    const err = tenantLogin(
+    const { error, isNew } = tenantLogin(
       document.getElementById('inRoom').value,
       document.getElementById('inName').value
     );
-    if (err) { showErr('tenantErr', err); return; }
+    if (error) { showErr('tenantErr', error); return; }
     hideErr('tenantErr');
-    showDetailsPage();
+    if (isNew) {
+      showDetailsPage();
+    } else {
+      showPage('mainPage');
+      renderMain();
+    }
   });
 
   document.getElementById('btnSaveDetails').addEventListener('click', saveDetails);
