@@ -54,6 +54,10 @@ const T = {
     btnMarkPaid: "Mark Paid",
     btnMarkUnpaid: "Mark Unpaid",
     btnDelete: "Delete",
+    btnEnablePayment: "Enable Payment for Tenants",
+    btnDisablePayment: "Disable Payment",
+    paymentActive: "Payment is currently open for tenants.",
+    payNotReady: "Payment is not yet available. The admin will enable it once all fees are confirmed.",
     btnReregister: "Re-register",
     confirmReregister: "Re-register this tenant? This will restore them as an active tenant.",
     payTitle: "Payment Information",
@@ -127,6 +131,10 @@ const T = {
     btnMarkPaid: "Als bezahlt markieren",
     btnMarkUnpaid: "Als unbezahlt markieren",
     btnDelete: "Löschen",
+    btnEnablePayment: "Zahlung für Mieter freischalten",
+    btnDisablePayment: "Zahlung sperren",
+    paymentActive: "Zahlung ist derzeit für Mieter freigeschaltet.",
+    payNotReady: "Zahlung noch nicht verfügbar. Der Admin schaltet sie frei, sobald alle Beträge bestätigt sind.",
     btnReregister: "Wieder anmelden",
     confirmReregister: "Diesen Mieter wieder anmelden? Er wird wieder als aktiver Mieter geführt.",
     payTitle: "Zahlungsinformationen",
@@ -579,11 +587,27 @@ function renderPayment() {
   const isAdmin = currentUserId === 'admin';
 
   if (isAdmin) {
+    const enabled = appData.admin?.paymentEnabled || false;
     body.innerHTML = `
       <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('ibanLabel'))}</span>
         <strong>DE19 6725 0020 1019 1607 22</strong></p>
       <p class="pay-iban-line"><span class="pay-iban-key">${escHtml(t('beneficiaryLabel'))}</span>
-        <strong>Siar Amin</strong></p>`;
+        <strong>Siar Amin</strong></p>
+      <div style="margin-top:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <button class="btn ${enabled ? 'btn-ghost' : 'btn-primary'}" id="btnTogglePayment">
+          ${escHtml(t(enabled ? 'btnDisablePayment' : 'btnEnablePayment'))}
+        </button>
+        ${enabled ? `<span class="ok-msg" style="margin-top:0">${escHtml(t('paymentActive'))}</span>` : ''}
+      </div>`;
+    document.getElementById('btnTogglePayment').addEventListener('click', () => {
+      dbRef('admin/paymentEnabled').set(!enabled);
+    });
+    return;
+  }
+
+  // Tenant: check if admin has enabled payment
+  if (!appData.admin?.paymentEnabled) {
+    body.innerHTML = `<p class="bnr-unknown">${escHtml(t('payNotReady'))}</p>`;
     return;
   }
 
