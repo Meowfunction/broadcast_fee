@@ -375,7 +375,7 @@ function showDetailsPage() {
   const me = getTenantsList().find(tn => tn.id === currentUserId);
   if (me) {
     document.getElementById('dPhone').value   = me.phone || '';
-    document.getElementById('dRegDate').value = me.registrationDate ? me.registrationDate.slice(0, 7) : '';
+    document.getElementById('dRegDate').value = me.registrationDate || '';
   }
   showPage('detailsPage');
 }
@@ -386,7 +386,7 @@ function saveDetails() {
   if (!regMonth) { showErr('detailsErr', t('errFillAll')); return; }
   dbRef(`tenants/${currentUserId}`).update({
     phone,
-    registrationDate: regMonth + '-01'
+    registrationDate: regMonth
   });
   hideErr('detailsErr');
   showPage('mainPage');
@@ -440,7 +440,7 @@ function renderMain() {
       document.getElementById('fRoom').value    = me.room;
       document.getElementById('fName').value    = me.name;
       document.getElementById('fPhone').value   = me.phone || '';
-      document.getElementById('fRegDate').value = me.registrationDate ? me.registrationDate.slice(0, 7) : '';
+      document.getElementById('fRegDate').value = me.registrationDate || '';
     }
   }
 
@@ -541,7 +541,7 @@ function saveMyInfo() {
   const conflict = tenants.find(tn => tn.room === room && tn.id !== currentUserId);
   if (conflict) { showSaveMsg(false); return; }
 
-  dbRef(`tenants/${currentUserId}`).update({ room, name, phone, registrationDate: regMonth + '-01' });
+  dbRef(`tenants/${currentUserId}`).update({ room, name, phone, registrationDate: regMonth });
   showSaveMsg(true);
 }
 
