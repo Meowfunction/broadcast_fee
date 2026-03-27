@@ -311,6 +311,7 @@ th {
   color: var(--mid);
   white-space: nowrap;
 }
+#thFee { white-space: normal; max-width: 90px; }
 td {
   padding: 10px 12px;
   border-bottom: 1px solid #f0ead8;
